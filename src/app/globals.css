@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-hanken);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-hanken);
+  --font-reading: var(--font-newsreader);
+  --color-highlighter: var(--highlighter);
+  --color-highlighter-strong: var(--highlighter-strong);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-shelf: var(--shelf);
+  --color-rule: var(--rule);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+  Reading-room palette
+  ink #172036 · paper #F7F8FA · shelf #E9EDF2 · rule #D3DAE3 · cobalt #2D4FD6 · highlighter #FCE38A
+  Highlighter is reserved for text that comes from the user's documents (sources, excerpts).
+*/
+:root {
+  --ink: #172036;
+  --paper: #f7f8fa;
+  --shelf: #e9edf2;
+  --rule: #d3dae3;
+  --cobalt: #2d4fd6;
+  --highlighter: #fce38a;
+  --highlighter-strong: #f5d045;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--cobalt);
+  --primary-foreground: #ffffff;
+  --secondary: var(--shelf);
+  --secondary-foreground: var(--ink);
+  --muted: #eef1f5;
+  --muted-foreground: #5b6577;
+  --accent: #e3e9f9;
+  --accent-foreground: var(--ink);
+  --destructive: #c2352b;
+  --border: var(--rule);
+  --input: #c6cfda;
+  --ring: var(--cobalt);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.5rem;
+  --sidebar: var(--shelf);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--cobalt);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dde3ea;
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--rule);
+  --sidebar-ring: var(--cobalt);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+/* Assistant answers rendered by react-markdown (no typography plugin). */
+@layer components {
+  .markdown {
+    font-family: var(--font-reading);
+    font-size: 1.0625rem;
+    line-height: 1.62;
+    font-optical-sizing: auto;
+    max-width: 68ch;
+    hanging-punctuation: first;
+  }
+  .markdown > * + * { margin-top: 0.8em; }
+  .markdown h1, .markdown h2, .markdown h3, .markdown h4 { font-family: var(--font-sans); font-weight: 650; line-height: 1.3; letter-spacing: -0.005em; }
+  .markdown h1 { font-size: 1.25em; }
+  .markdown h2 { font-size: 1.125em; }
+  .markdown h3 { font-size: 1em; }
+  .markdown ul { list-style: disc; padding-left: 1.4em; }
+  .markdown ol { list-style: decimal; padding-left: 1.4em; }
+  .markdown li + li { margin-top: 0.25em; }
+  .markdown a { text-decoration: underline; text-underline-offset: 3px; }
+  .markdown strong { font-weight: 600; }
+  .markdown blockquote { border-left: 3px solid var(--border); padding-left: 0.9em; color: var(--muted-foreground); }
+  .markdown code { font-family: var(--font-mono); font-size: 0.875em; background: var(--muted); padding: 0.1em 0.35em; border-radius: 0.3em; }
+  .markdown pre { background: var(--muted); padding: 0.75em 1em; border-radius: 0.5em; overflow-x: auto; }
+  .markdown pre code { background: none; padding: 0; }
+  .markdown table { width: 100%; border-collapse: collapse; font-size: 0.925em; display: block; overflow-x: auto; }
+  .markdown th, .markdown td { border: 1px solid var(--border); padding: 0.35em 0.6em; text-align: left; }
+  .markdown th { background: var(--muted); font-weight: 600; }
+  .markdown hr { border-color: var(--border); }
+}
+
+/* Source excerpts: text quoted from the user's documents is marked with the highlighter. */
+@layer components {
+  .excerpt-mark {
+    background-image: linear-gradient(transparent 12%, var(--highlighter) 12%, var(--highlighter) 88%, transparent 88%);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0 0.15em;
+  }
+
+  /* The one orchestrated moment: when sources arrive, their numbers are swept with the highlighter. */
+  .source-chip {
+    background-image: linear-gradient(var(--highlighter), var(--highlighter));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    animation: highlighter-sweep 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 110ms);
+  }
+  @keyframes highlighter-sweep {
+    from { background-size: 0% 100%; }
+    to { background-size: 100% 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .source-chip { animation: none; }
+  }
+}
