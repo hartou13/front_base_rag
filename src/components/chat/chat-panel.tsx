@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AlertCircle, ArrowUp, Library, Loader2, PanelLeft, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { StoredUser } from "@/lib/auth";
 import type { ChatSource, Collection, Role } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ export function ChatPanel({
   loading,
   streaming,
   collection,
+  user,
   onSend,
   onStop,
   onToggleLeft,
@@ -47,6 +49,7 @@ export function ChatPanel({
   loading: boolean;
   streaming: boolean;
   collection: Collection | null;
+  user: StoredUser | null;
   onSend: (question: string) => void;
   onStop: () => void;
   onToggleLeft: () => void;
@@ -98,15 +101,24 @@ export function ChatPanel({
           ) : exchanges.length === 0 ? (
             <EmptyState collection={collection} onChooseCollection={onToggleRight} />
           ) : (
-            <ol className="divide-y divide-border">
+            <ol>
               {exchanges.map((ex) => (
-                <li key={ex.key} className="py-8 first:pt-6">
+                <li key={ex.key} className="pt-8 first:pt-6">
                   {ex.question && (
-                    <p className="mb-4 whitespace-pre-wrap text-[1.0625rem] font-semibold leading-snug text-ink">
-                      {ex.question.content}
-                    </p>
+                    <div className="mb-6 flex items-end justify-end gap-2.5">
+                      <p className="question-slip max-w-[80%] whitespace-pre-wrap md:max-w-[72%]">
+                        <span className="sr-only">You asked: </span>
+                        {ex.question.content}
+                      </p>
+                      <UserAvatar user={user} />
+                    </div>
                   )}
-                  {ex.answer && <Answer message={ex.answer} />}
+                  {ex.answer && (
+                    <div className="flex items-start gap-2.5">
+                      <AssistantAvatar />
+                      <Answer message={ex.answer} />
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>
@@ -219,10 +231,35 @@ function EmptyState({
   );
 }
 
+/** The user's initials on a cobalt disc: round, like a person. */
+function UserAvatar({ user }: { user: StoredUser | null }) {
+  const initials =
+    `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?";
+  return (
+    <span
+      aria-hidden
+      title={user ? `${user.first_name} ${user.last_name}`.trim() : undefined}
+      className="avatar avatar-user"
+    >
+      {initials}
+    </span>
+  );
+}
+
+/** The assistant: the wordmark's serif B on an ink tile, square like a book spine label. */
+function AssistantAvatar() {
+  return (
+    <span aria-hidden title="Base RAG" className="avatar avatar-assistant">
+      B
+    </span>
+  );
+}
+
 function Answer({ message }: { message: UiMessage }) {
   const waiting = message.status === "streaming" && !message.content;
   return (
-    <div>
+    <div className="answer-bubble min-w-0 flex-1">
+      <span className="sr-only">Answer: </span>
       {message.sources && message.sources.length > 0 && <Sources sources={message.sources} />}
 
       {waiting ? (

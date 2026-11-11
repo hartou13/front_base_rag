@@ -336,6 +336,7 @@ function ChatView() {
         loading={messagesLoading}
         streaming={streaming}
         collection={selectedCollection}
+        user={user}
         onSend={send}
         onStop={stopStream}
         onToggleLeft={() => setLeftOpen((o) => !o)}
