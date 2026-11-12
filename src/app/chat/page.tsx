@@ -93,7 +93,12 @@ function ChatView() {
         .getSession(id)
         .then((detail) => {
           if (!current()) return;
-          setMessages(detail.messages.map((m) => ({ id: m.id, role: m.role, content: m.content })));
+          setMessages(detail.messages.map((m) => ({
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              sources: m.sources ?? undefined,
+            })));
         })
         .catch((err) => {
           if (!current()) return;

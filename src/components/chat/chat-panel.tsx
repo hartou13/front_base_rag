@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertCircle, ArrowUp, Library, Loader2, PanelLeft, Square } from "lucide-react";
+import { AlertCircle, ArrowUp, ChevronDown, FileText, Library, Loader2, PanelLeft, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoredUser } from "@/lib/auth";
 import type { ChatSource, Collection, Role } from "@/lib/types";
@@ -30,6 +30,19 @@ function toExchanges(messages: UiMessage[]) {
     }
   }
   return out;
+}
+
+/** Every chunk cited in the conversation, once, with the number of answers that cite it. */
+function collectSources(messages: UiMessage[]) {
+  const byId = new Map<string, { source: ChatSource; count: number }>();
+  for (const m of messages) {
+    for (const s of m.sources ?? []) {
+      const entry = byId.get(s.id);
+      if (entry) entry.count += 1;
+      else byId.set(s.id, { source: s, count: 1 });
+    }
+  }
+  return [...byId.values()];
 }
 
 export function ChatPanel({
@@ -80,15 +93,17 @@ export function ChatPanel({
   }
 
   const exchanges = toExchanges(messages);
+  const globalSources = useMemo(() => collectSources(messages), [messages]);
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-paper">
-      <header className="flex h-14 shrink-0 items-center gap-2 px-3 md:px-8">
+      <header className="relative flex h-14 shrink-0 items-center gap-2 px-3 md:px-8">
         <Button size="icon-sm" variant="ghost" className="md:hidden" aria-label="Show conversations" onClick={onToggleLeft}>
           <PanelLeft />
         </Button>
-        <div className="mx-auto w-full max-w-[46rem] min-w-0 md:px-8">
-          <h1 className="truncate text-[0.9375rem] font-semibold">{title}</h1>
+        <div className="mx-auto flex w-full max-w-[46rem] min-w-0 items-center gap-3 md:px-8">
+          <h1 className="min-w-0 truncate text-[0.9375rem] font-semibold">{title}</h1>
+          {!loading && globalSources.length > 0 && <GlobalSources items={globalSources} />}
         </div>
       </header>
 
@@ -195,6 +210,100 @@ export function ChatPanel({
   );
 }
 
+function GlobalSources({ items }: { items: { source: ChatSource; count: number }[] }) {
+  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Group the unique chunks by file so the list reads as "documents, then passages".
+  const groups = useMemo(() => {
+    const map = new Map<string, { name: string; chunks: typeof items }>();
+    for (const it of items) {
+      const key = it.source.file_id ?? it.source.filename ?? "unknown";
+      const g = map.get(key) ?? { name: it.source.filename ?? "Unknown file", chunks: [] };
+      g.chunks.push(it);
+      map.set(key, g);
+    }
+    return [...map.entries()];
+  }, [items]);
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls="global-sources"
+        className={cn(
+          "flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border bg-white px-3 text-[0.8125rem] font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-primary/30",
+          open ? "border-highlighter-strong" : "border-input hover:border-ring",
+        )}
+      >
+        <FileText aria-hidden className="size-3.5" />
+        Sources
+        <span className="tabular-nums text-muted-foreground">{items.length}</span>
+        <ChevronDown
+          aria-hidden
+          className={cn("size-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")}
+        />
+      </button>
+      {open && (
+        <div
+          id="global-sources"
+          className="absolute inset-x-3 top-full z-20 mx-auto max-h-[60vh] max-w-[46rem] overflow-y-auto rounded-lg border border-input bg-white text-[0.8125rem] shadow-lg md:inset-x-8"
+        >
+          <p className="border-b border-input px-3.5 py-2 text-xs text-muted-foreground">
+            {items.length} {items.length === 1 ? "passage" : "passages"} from {groups.length}{" "}
+            {groups.length === 1 ? "document" : "documents"} in this conversation
+          </p>
+          {groups.map(([key, g]) => (
+            <div key={key} className="border-b border-input last:border-b-0">
+              <p className="flex items-center gap-2 bg-muted/50 px-3.5 py-1.5 text-xs font-semibold text-foreground">
+                <FileText aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate">{g.name}</span>
+              </p>
+              <ul>
+                {g.chunks.map(({ source, count }) => {
+                  const isOpen = expanded.has(source.id);
+                  return (
+                    <li key={source.id} className="px-3.5 py-2">
+                      <button
+                        type="button"
+                        onClick={() => toggle(source.id)}
+                        aria-expanded={isOpen}
+                        className="block w-full cursor-pointer rounded-sm text-left outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                      >
+                        <span
+                          className={cn(
+                            "block font-reading text-[0.875rem] leading-relaxed text-ink",
+                            !isOpen && "line-clamp-2",
+                          )}
+                        >
+                          {isOpen ? <span className="excerpt-mark">{source.text.trim()}</span> : source.text.trim()}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {count === 1 ? "cited once" : `cited ${count} times`} · {isOpen ? "show less" : "show more"}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 function EmptyState({
   collection,
   onChooseCollection,
@@ -260,7 +369,6 @@ function Answer({ message }: { message: UiMessage }) {
   return (
     <div className="answer-bubble min-w-0 flex-1">
       <span className="sr-only">Answer: </span>
-      {message.sources && message.sources.length > 0 && <Sources sources={message.sources} />}
 
       {waiting ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -276,6 +384,8 @@ function Answer({ message }: { message: UiMessage }) {
         </div>
       )}
 
+      {message.sources && message.sources.length > 0 && !waiting && <Sources sources={message.sources} />}
+
       {message.status === "error" && (
         <p className="mt-3 flex items-start gap-1.5 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -289,47 +399,77 @@ function Answer({ message }: { message: UiMessage }) {
   );
 }
 
-/** Ranked passages the answer was drawn from, shown as footnotes. Lower distance = closer match. */
+/** Ranked passages the answer was drawn from, behind a button. Lower distance = closer match. */
 function Sources({ sources }: { sources: ChatSource[] }) {
+  const [shown, setShown] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
-  const match = (d: number) => Math.max(0, Math.round((1 - d) * 100));
+  const pct = (d: number | null) => (d == null ? null : Math.max(0, Math.round((1 - d) * 100)));
+  const listId = useId();
 
   return (
-    <div className="mb-4">
-      <ol className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8125rem]">
-        {sources.map((s, i) => (
-          <li key={`${s.file_id ?? "src"}-${i}`}>
-            <button
-              type="button"
-              onClick={() => setOpen(open === i ? null : i)}
-              aria-expanded={open === i}
-              className={cn(
-                "group flex max-w-[16rem] items-center gap-1.5 rounded-sm text-left text-muted-foreground hover:text-foreground",
-                open === i && "text-foreground",
-              )}
-              title={`${s.filename ?? "Unknown file"}: ${match(s.distance)}% match`}
-            >
-              <span
-                className="source-chip inline-flex h-[1.35rem] min-w-[1.35rem] items-center justify-center rounded-[3px] px-1 text-[0.75rem] font-semibold text-ink tabular-nums"
-                style={{ "--i": i } as React.CSSProperties}
-              >
-                {i + 1}
-              </span>
-              <span className="truncate underline-offset-2 group-hover:underline">{s.filename ?? "Unknown file"}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => setShown(!shown)}
+        aria-expanded={shown}
+        aria-controls={listId}
+        className="flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-input bg-white px-3 text-[0.8125rem] font-medium text-muted-foreground outline-none transition-colors duration-150 hover:border-ring hover:text-foreground focus-visible:ring-3 focus-visible:ring-primary/30"
+      >
+        <FileText aria-hidden className="size-3.5" />
+        Sources
+        <span className="tabular-nums">{sources.length}</span>
+        <ChevronDown
+          aria-hidden
+          className={cn("size-4 transition-transform duration-200 motion-reduce:transition-none", shown && "rotate-180")}
+        />
+      </button>
 
-      {open !== null && sources[open] && (
-        <figure className="mt-3 border-l-2 border-highlighter-strong pl-4">
-          <blockquote className="font-reading text-[0.9375rem] leading-relaxed text-ink">
-            <span className="excerpt-mark">{sources[open].text.trim()}</span>
-          </blockquote>
-          <figcaption className="mt-2 text-xs text-muted-foreground">
-            {sources[open].filename ?? "Unknown file"}, {match(sources[open].distance)}% match with your question
-          </figcaption>
-        </figure>
+      {shown && (
+        <div id={listId} className="mt-3">
+          <ol className="flex flex-wrap gap-2 text-[0.8125rem]">
+            {sources.map((s, i) => {
+              const active = open === i;
+              const match = pct(s.distance);
+              return (
+                <li key={`${s.id}-${i}`} className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(active ? null : i)}
+                    aria-expanded={active}
+                    className={cn(
+                      "flex min-h-9 max-w-[15rem] cursor-pointer items-center gap-2 rounded-full border bg-white py-1 pr-3 pl-1.5 text-left outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-primary/30",
+                      active
+                        ? "border-highlighter-strong text-foreground"
+                        : "border-input text-muted-foreground hover:border-ring hover:text-foreground",
+                    )}
+                    title={`${s.filename ?? "Unknown file"}${match != null ? `: ${match}% match` : ""}`}
+                  >
+                    <span
+                      className="source-chip inline-flex size-[1.4rem] shrink-0 items-center justify-center rounded-full text-[0.75rem] font-semibold text-ink tabular-nums"
+                      style={{ "--i": i } as React.CSSProperties}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="truncate">{s.filename ?? "Unknown file"}</span>
+                    {match != null && <span className="shrink-0 text-xs tabular-nums opacity-70">{match}%</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          {open !== null && sources[open] && (
+            <figure className="mt-3 border-l-2 border-highlighter-strong pl-4">
+              <blockquote className="font-reading text-[0.9375rem] leading-relaxed text-ink">
+                <span className="excerpt-mark">{sources[open].text.trim()}</span>
+              </blockquote>
+              <figcaption className="mt-2 text-xs text-muted-foreground">
+                {sources[open].filename ?? "Unknown file"}
+                {pct(sources[open].distance) != null && `, ${pct(sources[open].distance)}% match with your question`}
+              </figcaption>
+            </figure>
+          )}
+        </div>
       )}
     </div>
   );

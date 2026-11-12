@@ -29,6 +29,7 @@ export interface Message {
   role: Role;
   content: string;
   created_at: string | null;
+  sources?: ChatSource[] | null;
 }
 
 export interface SessionDetail extends Session {
@@ -57,10 +58,13 @@ export interface CollectionFile {
 }
 
 export interface ChatSource {
+  /** Chroma chunk id: "{file_id}:{chunk_index}" */
+  id: string;
   file_id: string | null;
   filename: string | null;
   text: string;
-  distance: number;
+  /** Not stored, so null on reloaded messages. */
+  distance: number | null;
 }
 
 export interface ChatRequest {
