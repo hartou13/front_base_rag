@@ -7,6 +7,7 @@ import { AlertCircle, ArrowUp, ChevronDown, FileText, Library, Loader2, PanelLef
 import { Button } from "@/components/ui/button";
 import type { StoredUser } from "@/lib/auth";
 import type { ChatSource, Collection, Role } from "@/lib/types";
+import { safeMarkdownComponents, safeUrlTransform } from "@/lib/safe-markdown";
 import { cn } from "@/lib/utils";
 
 export interface UiMessage {
@@ -377,7 +378,13 @@ function Answer({ message }: { message: UiMessage }) {
         </p>
       ) : (
         <div className="markdown text-ink">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={safeMarkdownComponents}
+            urlTransform={safeUrlTransform}
+          >
+            {message.content}
+          </ReactMarkdown>
           {message.status === "streaming" && (
             <span aria-hidden className="ml-0.5 inline-block h-[1.05em] w-[2px] animate-pulse bg-primary align-text-bottom" />
           )}

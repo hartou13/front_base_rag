@@ -145,6 +145,12 @@ export const deleteFile = (fileId: string) =>
 export const reindexFile = (fileId: string) =>
   apiFetch<CollectionFile>(`/files/${fileId}/reindex`, { method: "POST" });
 
+/** Short-lived signed URL (about 5 minutes) that downloads the file without a bearer header. */
+export async function getDownloadUrl(fileId: string): Promise<string> {
+  const { url } = await apiFetch<{ url: string; expires_at: string }>(`/files/${fileId}/download`);
+  return `${API_URL}${url}`;
+}
+
 /** The original file needs the bearer header, so it is fetched as a blob rather than linked directly. */
 export async function fetchFileBlob(fileId: string): Promise<Blob> {
   const path = `/files/${fileId}/content`;

@@ -208,17 +208,22 @@ function DocumentsManager({
     });
   }
 
-  function downloadFile(f: Row) {
-    void withBlob(f, "download", (blob) => {
-      const url = URL.createObjectURL(blob);
+  async function downloadFile(f: Row) {
+    setBusy((b) => ({ ...b, [f.id]: "download" }));
+    try {
+      // Signed, short-lived URL: the browser downloads it directly, no blob held in memory.
+      const url = await api.getDownloadUrl(f.id);
       const a = document.createElement("a");
       a.href = url;
       a.download = f.filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not get the file");
+    } finally {
+      clearBusy(f.id);
+    }
   }
 
   // ---- retry ----
